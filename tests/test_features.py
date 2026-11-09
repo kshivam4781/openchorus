@@ -167,7 +167,8 @@ def test_downloads_mp3_wav_mp4(client):
     # Deleting removes every file that belongs to the song.
     files = [settings.audio_dir / s["audio_file"], settings.audio_dir / s["params"]["wav_file"],
              settings.audio_dir / s["params"]["raw_file"]]
-    assert client.delete(f"/api/songs/{s['id']}").status_code == 200
+    deleted = client.delete(f"/api/songs/{s['id']}")
+    assert deleted.status_code == 200
     assert not any(f.exists() for f in files) and not list(settings.audio_dir.glob(f"{s['id']}_*.mp4"))
 
 
@@ -229,14 +230,14 @@ def test_max_mode_renders_extra_candidates(tmp_path, monkeypatch):
 
 def test_restart_resumes_unfinished_finishing(client, aux):
     """A song caught mid-mastering or mid-painting by a restart gets finished, not stuck."""
-    import server.main as M
+    from server.main import merge_params, resume_finishing
 
     s = create(client, mode="custom", style="ambient", title="Half Done", variations=1, duration=10)[0]
     s = wait_polished(client, s["id"])
-    M.merge_params(s["id"], polishing="rating", art_status="painting", rating=None)
+    merge_params(s["id"], polishing="rating", art_status="painting", rating=None)
 
     async def restart():
-        M.resume_finishing()
+        resume_finishing()
 
     client.portal.call(restart)
     s = wait_polished(client, s["id"])
@@ -260,5 +261,6 @@ def test_delete_survives_locked_files(client, monkeypatch, tmp_path):
         return real(self, missing_ok=missing_ok)
 
     monkeypatch.setattr(pathlib.Path, "unlink", flaky)
-    assert client.delete(f"/api/songs/{s['id']}").status_code == 200
+    deleted = client.delete(f"/api/songs/{s['id']}")
+    assert deleted.status_code == 200
     assert client.get(f"/api/songs/{s['id']}").status_code == 404

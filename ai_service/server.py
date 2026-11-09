@@ -111,7 +111,6 @@ def _release_scoring() -> None:
     _free_gpu()
 _judge = None
 _cover = None
-_cover_mode = "model"
 
 
 def _device() -> str:
@@ -127,8 +126,8 @@ def _free_gpu() -> None:
 
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
-    except Exception:
-        pass
+    except Exception:  # noqa: BLE001
+        return  # no torch or no CUDA: nothing to free
 
 
 WHISPER_REPO = os.environ.get("AUX_WHISPER_MODEL", "mobiuslabsgmbh/faster-whisper-large-v3-turbo")
@@ -362,19 +361,18 @@ def cover(body: CoverBody) -> dict:
                   "professional illustration, rich color, dramatic lighting")
         kw = dict(prompt=prompt, negative_prompt=NEGATIVE, num_inference_steps=body.steps,
                   guidance_scale=1.5, width=body.size, height=body.size)
-        global _cover_mode
-        if _device() == "cuda" and _cover_mode != "sequential" and not _fits(4.0):
+        if _device() == "cuda" and not getattr(pipe, "_oc_sequential", False) and not _fits(4.0):
             # Little VRAM left: stream the model layer by layer (slower, but far faster than
             # spilling into system RAM).
             pipe.enable_sequential_cpu_offload()
-            _cover_mode = "sequential"
+            pipe._oc_sequential = True
         try:
             img = pipe(generator=gen, **kw).images[0]
         except torch.cuda.OutOfMemoryError:
             # The music model holds most of the VRAM: stream layers one by one instead.
             _free_gpu()
             pipe.enable_sequential_cpu_offload()
-            _cover_mode = "sequential"
+            pipe._oc_sequential = True
             gen = torch.Generator("cpu").manual_seed(body.seed if body.seed is not None else int(time.time()))
             img = pipe(generator=gen, **kw).images[0]
         img.convert("RGB").save(out, quality=92)

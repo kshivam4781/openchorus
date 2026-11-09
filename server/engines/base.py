@@ -73,7 +73,7 @@ class Engine(abc.ABC):
 
     @abc.abstractmethod
     async def generate(self, req: GenRequest, progress: Progress) -> list[GenResult]:
-        ...
+        """Render the request and return one result per take."""
 
     async def write_lyrics(self, prompt: str, style: str = "") -> Optional[dict]:
         """Return {"lyrics": str, "style": str} or None if unsupported."""

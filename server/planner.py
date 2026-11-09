@@ -157,8 +157,8 @@ class OllamaPlanner:
         try:
             async with self._client(15.0) as c:
                 await c.post("/api/generate", json={"model": model, "keep_alive": 0})
-        except Exception:
-            pass
+        except Exception:  # noqa: BLE001
+            return  # Ollama frees the model by itself after its keep-alive; nothing to do
 
     async def plan_many(self, description: str, n: int, **kw) -> list[SongPlan]:
         """Plan n takes in parallel (Ollama batches them), then unload the model."""

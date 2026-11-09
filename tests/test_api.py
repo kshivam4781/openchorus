@@ -120,7 +120,8 @@ def test_persona(client):  # checklist 12
     assert any(x["id"] == p["id"] for x in client.get("/api/personas").json()["personas"])
     s = create(client, mode="custom", lyrics="[Verse]\nla la", persona_id=p["id"], variations=1, duration=10)[0]
     assert s["status"] == "complete" and s["style"].startswith("dreamy") and s["persona_id"] == p["id"]
-    assert client.delete(f"/api/personas/{p['id']}").status_code == 200
+    r = client.delete(f"/api/personas/{p['id']}")
+    assert r.status_code == 200
 
 
 def test_upload_then_extend(client, tmp_path):  # checklist 13
@@ -149,11 +150,14 @@ def test_stems_reports_missing_demucs(client):  # checklist 14
 
 def test_library_like_search_rename_delete(client):  # checklist 7
     s = create(client, mode="custom", style="jazz", title="Blue Room", variations=1, duration=10)[0]
-    assert client.patch(f"/api/songs/{s['id']}", json={"liked": True}).json()["song"]["liked"]
+    liked = client.patch(f"/api/songs/{s['id']}", json={"liked": True}).json()["song"]
+    assert liked["liked"]
     assert any(x["id"] == s["id"] for x in client.get("/api/songs?liked=true").json()["songs"])
     assert client.get("/api/songs?q=Blue%20Room").json()["songs"][0]["id"] == s["id"]
-    assert client.patch(f"/api/songs/{s['id']}", json={"title": "Green Room"}).json()["song"]["title"] == "Green Room"
-    assert client.delete(f"/api/songs/{s['id']}").status_code == 200
+    renamed = client.patch(f"/api/songs/{s['id']}", json={"title": "Green Room"}).json()["song"]
+    assert renamed["title"] == "Green Room"
+    deleted = client.delete(f"/api/songs/{s['id']}")
+    assert deleted.status_code == 200
     assert client.get(f"/api/songs/{s['id']}").status_code == 404
 
 
