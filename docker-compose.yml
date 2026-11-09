@@ -1,0 +1,28 @@
+# GPU setup: ACE-Step 1.5 (cloned at ../ACE-Step-1.5) + OpenChorus.
+services:
+  acestep:
+    build: ../ACE-Step-1.5
+    environment:
+      - ACESTEP_MODE=api            # ACE-Step's image runs its REST API on 0.0.0.0:8001 in this mode
+    volumes:
+      - acestep-checkpoints:/app/checkpoints
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+  openchorus:
+    build: .
+    ports:
+      - "7777:7777"
+    environment:
+      - ACESTEP_URL=http://acestep:8001
+    volumes:
+      - openchorus-data:/data
+    depends_on:
+      - acestep
+volumes:
+  acestep-checkpoints:
+  openchorus-data:

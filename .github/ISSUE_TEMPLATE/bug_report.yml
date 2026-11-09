@@ -1,0 +1,48 @@
+name: Bug report
+description: Something does not work as described
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for reporting. Please check open issues first.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open Simple mode
+        2. Enter "..."
+        3. Click Create
+    validations:
+      required: true
+  - type: dropdown
+    id: engine
+    attributes:
+      label: Engine
+      options: ["ACE-Step 1.5", "Demo engine", "Not sure"]
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: OpenChorus version
+      description: Shown by GET /api/status
+      placeholder: "1.0.0"
+  - type: input
+    id: system
+    attributes:
+      label: OS, GPU and VRAM
+      placeholder: "Windows 11, RTX 4070 12 GB"
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Server output or the error shown in the app. Remove anything private.
+      render: shell

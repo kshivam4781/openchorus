@@ -1,0 +1,16 @@
+# Install PyTorch with CUDA first, e.g.:
+#   pip install torch==2.7.1+cu128 torchaudio==2.7.1+cu128 --index-url https://download.pytorch.org/whl/cu128
+diffusers>=0.31
+transformers>=4.44,<5
+accelerate
+peft
+safetensors
+audiobox_aesthetics
+demucs
+soundfile
+pillow
+fastapi
+uvicorn[standard]
+python-multipart
+faster-whisper
+hf_xet

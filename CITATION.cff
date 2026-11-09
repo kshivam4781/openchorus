@@ -1,0 +1,16 @@
+cff-version: 1.2.0
+message: "If you use OpenChorus in your work, please cite it as below."
+title: "OpenChorus: a free, open-source, self-hosted song studio"
+type: software
+authors:
+  - given-names: Shivam
+    family-names: Singh
+repository-code: "https://github.com/kshivam4781/openchorus"
+license: MIT
+version: 1.0.0
+date-released: 2026-11-09
+keywords:
+  - music generation
+  - text-to-music
+  - ACE-Step
+  - self-hosted

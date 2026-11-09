@@ -1,0 +1,16 @@
+__pycache__/
+*.pyc
+.venv/
+.env
+data/
+.pytest_cache/
+ai_service/models/
+ai_service/.venv/
+ai_service/*.log
+bench/
+*.log
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+.ruff_cache/

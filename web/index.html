@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OpenChorus</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%231f2a3a'/%3E%3Ccircle cx='16' cy='16' r='9' fill='none' stroke='%23f2b33d' stroke-width='3'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%237fc4c0'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<div class="app">
+  <aside class="side" aria-label="Main">
+    <div class="brand">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="13" class="b1"/><circle cx="16" cy="16" r="8" class="b2"/><circle cx="16" cy="16" r="2.6" class="b3"/></svg>
+      <span>OpenChorus</span>
+    </div>
+    <nav class="nav">
+      <button class="nav-btn active" data-view="all">Library</button>
+      <button class="nav-btn" data-view="liked">Liked</button>
+      <button class="nav-btn" data-view="personas">Personas</button>
+    </nav>
+    <label class="upload">
+      <input type="file" id="uploadInput" accept=".mp3,.wav,.flac,.ogg,.m4a,.aac,.opus">
+      <span>Upload audio</span>
+    </label>
+    <div class="engine" id="engineBox" aria-live="polite">Checking engine…</div>
+  </aside>
+
+  <section class="create" aria-labelledby="createTitle">
+    <div class="create-head">
+      <h1 id="createTitle">Make a song</h1>
+      <div class="seg" role="tablist" aria-label="Mode">
+        <button role="tab" aria-selected="true" class="seg-btn active" data-mode="simple">Simple</button>
+        <button role="tab" aria-selected="false" class="seg-btn" data-mode="custom">Custom</button>
+      </div>
+    </div>
+
+    <div class="seg kind-seg" role="tablist" aria-label="What to make">
+      <button role="tab" aria-selected="true" class="seg-btn active" data-kind="song">Song</button>
+      <button role="tab" aria-selected="false" class="seg-btn" data-kind="sound">Sound</button>
+    </div>
+
+    <form id="createForm" autocomplete="off">
+      <div class="simple-only field">
+        <label for="description">What should the song be about?</label>
+        <textarea id="description" rows="4" maxlength="1000" placeholder="An upbeat synthwave song about driving through a neon city at 2am"></textarea>
+        <div class="under-field">
+          <label class="link pic-link" title="A local vision model turns a picture into a song idea">
+            <input type="file" id="inspireInput" accept="image/png,image/jpeg,image/webp">Use a picture
+          </label>
+        </div>
+      </div>
+
+      <div class="custom-only song-only field">
+        <div class="label-row">
+          <label for="lyrics">Lyrics</label>
+          <button type="button" class="link" id="writeLyrics">Write lyrics</button>
+        </div>
+        <textarea id="lyrics" rows="9" maxlength="6000" placeholder="[Verse 1]&#10;Your words here&#10;&#10;[Chorus]&#10;..."></textarea>
+        <div class="tags" aria-label="Insert section tag">
+          <button type="button" data-tag="[Intro]">Intro</button>
+          <button type="button" data-tag="[Verse]">Verse</button>
+          <button type="button" data-tag="[Pre-Chorus]">Pre-chorus</button>
+          <button type="button" data-tag="[Chorus]">Chorus</button>
+          <button type="button" data-tag="[Bridge]">Bridge</button>
+          <button type="button" data-tag="[Guitar Solo]">Solo</button>
+          <button type="button" data-tag="[Outro]">Outro</button>
+        </div>
+      </div>
+
+      <div class="custom-only field">
+        <label for="style">Style of music</label>
+        <textarea id="style" rows="2" maxlength="1000" placeholder="synthwave, retro 80s, driving bass, female vocals"></textarea>
+        <div class="chips" id="styleChips"></div>
+      </div>
+
+      <div class="custom-only field">
+        <label for="title">Title <span class="opt">optional</span></label>
+        <input id="title" maxlength="120" placeholder="Leave blank and one is picked from the chorus">
+      </div>
+
+      <div class="field persona-field song-only" id="personaField" hidden>
+        <label for="persona">Persona</label>
+        <select id="persona"><option value="">None</option></select>
+      </div>
+
+      <div class="row-toggle">
+        <label class="switch song-only"><input type="checkbox" id="instrumental"><span></span>Instrumental</label>
+        <button type="button" class="link" id="surprise">Surprise me</button>
+      </div>
+
+      <details class="adv more" id="moreOpts">
+        <summary>More options</summary>
+        <div class="opt-row song-only">
+          <span class="opt-label" id="vgLabel">Vocals</span>
+          <div class="seg small" role="radiogroup" aria-labelledby="vgLabel" id="vocalGender">
+            <button type="button" role="radio" aria-checked="true" class="seg-btn active" data-v="">Auto</button>
+            <button type="button" role="radio" aria-checked="false" class="seg-btn" data-v="female">Female</button>
+            <button type="button" role="radio" aria-checked="false" class="seg-btn" data-v="male">Male</button>
+          </div>
+        </div>
+        <label class="slider"><span>Weirdness <output id="weirdOut">50%</output></span>
+          <input type="range" id="weirdness" min="0" max="100" step="5" value="50">
+          <small>Low stays classic for the genre. High tries unusual blends and sounds.</small></label>
+        <label class="slider"><span>Style influence <output id="infOut">50%</output></span>
+          <input type="range" id="styleInfluence" min="0" max="100" step="5" value="50">
+          <small>How strictly the music follows your style words.</small></label>
+        <label class="slider simple-only"><span>Take variety</span>
+          <select id="variety"><option value="low">Close variations</option><option value="normal" selected>Different angles</option><option value="high">Very different</option></select></label>
+        <label class="slider"><span>Exclude styles</span>
+          <input id="exclude" maxlength="300" placeholder="e.g. autotune, heavy drums, rap"></label>
+        <label class="switch max-switch"><input type="checkbox" id="maxMode"><span></span>Max Mode</label>
+        <p class="adv-note">Max Mode renders twice as many takes and keeps the ones an AI judge rates best for enjoyment and production. It takes about twice as long.</p>
+      </details>
+
+      <details class="adv">
+        <summary>Advanced</summary>
+        <div class="grid">
+          <label>Length (s)<input id="duration" type="number" min="10" max="600" step="1" placeholder="auto"></label>
+          <label>BPM<input id="bpm" type="number" min="30" max="300" placeholder="auto"></label>
+          <label>Key<input id="key" maxlength="20" placeholder="e.g. A minor"></label>
+          <label>Seed<input id="seed" type="number" min="0" placeholder="random"></label>
+          <label>Takes<select id="variations"><option>1</option><option selected>2</option><option>3</option><option>4</option></select></label>
+          <label>Quality<select id="quality"><option value="high" selected>High (slower)</option><option value="fast">Fast</option></select></label>
+          <label>Language<input id="lang" maxlength="8" value="en"></label>
+        </div>
+        <p class="adv-note simple-only">Leave these blank and the AI picks the length, tempo and key for each take.</p>
+      </details>
+
+      <p class="form-error" id="formError" role="alert" hidden></p>
+      <button type="submit" class="create-btn" id="createBtn">Create</button>
+    </form>
+  </section>
+
+  <main class="lib" aria-labelledby="libTitle">
+    <div class="lib-head">
+      <h2 id="libTitle">Library</h2>
+      <input type="search" id="search" placeholder="Search titles, styles, lyrics" aria-label="Search library">
+    </div>
+    <div class="banner" id="banner" hidden></div>
+    <ul class="songs" id="songs"></ul>
+    <div class="personas" id="personas" hidden></div>
+  </main>
+
+  <aside class="drawer" id="drawer" aria-label="Song details" hidden>
+    <div class="drawer-inner" id="drawerInner"></div>
+  </aside>
+</div>
+
+<footer class="player" id="player" aria-label="Player">
+  <div class="p-cover-wrap"><canvas class="p-cover" id="pCover" width="96" height="96" aria-hidden="true"></canvas><img class="p-cover" id="pArt" alt="" hidden></div>
+  <div class="p-meta"><div class="p-title" id="pTitle">Nothing playing</div><div class="p-sub" id="pSub">Pick a song from your library</div></div>
+  <button class="p-play" id="pPlay" aria-label="Play" disabled>
+    <svg viewBox="0 0 24 24" class="i-play"><path d="M7 4.5v15l13-7.5z"/></svg>
+    <svg viewBox="0 0 24 24" class="i-pause"><path d="M6 4h4.5v16H6zM13.5 4H18v16h-4.5z"/></svg>
+  </button>
+  <span class="p-time" id="pCur">0:00</span>
+  <canvas class="p-wave" id="pWave" aria-label="Seek" role="slider" tabindex="0" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></canvas>
+  <span class="p-time" id="pDur">0:00</span>
+  <a class="p-dl" id="pDl" aria-label="Download" hidden><svg viewBox="0 0 24 24"><path d="M12 3v12m0 0l-5-5m5 5l5-5M4 20h16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></a>
+  <audio id="audio" preload="metadata"></audio>
+</footer>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script src="app.js"></script>
+</body>
+</html>
