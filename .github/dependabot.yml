@@ -1,19 +1,30 @@
 version: 2
 updates:
+  # Requirements use minimum versions. Only propose a change when a new release
+  # falls outside the allowed range, instead of raising every floor.
   - package-ecosystem: pip
     directory: /
     schedule:
       interval: weekly
+    versioning-strategy: increase-if-necessary
     open-pull-requests-limit: 5
   - package-ecosystem: pip
     directory: /ai_service
     schedule:
       interval: monthly
+    versioning-strategy: increase-if-necessary
+    ignore:
+      # audiobox-aesthetics and the cover pipeline are tested on transformers 4.x.
+      - dependency-name: transformers
+        update-types: ["version-update:semver-major"]
     open-pull-requests-limit: 3
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: monthly
+    groups:
+      actions:
+        patterns: ["*"]
   - package-ecosystem: docker
     directory: /
     schedule:

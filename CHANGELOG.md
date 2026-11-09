@@ -34,7 +34,7 @@ First public release.
   without a GPU.
 - **Tooling:** benchmark scripts (`tools/bench_*.py`), a resumable model fetcher, Windows
   start/stop scripts, Docker and Docker Compose files.
-- **Tests:** 49 API and engine-contract tests plus a Playwright end-to-end run.
+- **Tests:** 50 API and engine-contract tests plus a Playwright end-to-end run.
 
 [Unreleased]: https://github.com/kshivam4781/openchorus/compare/v1.0.0...HEAD
 [1.0.0]: https://github.com/kshivam4781/openchorus/releases/tag/v1.0.0

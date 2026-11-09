@@ -244,7 +244,7 @@ Interactive docs at **http://127.0.0.1:7777/docs**.
 pip install -r requirements-dev.txt
 python -m playwright install chromium
 ruff check .                     # lint
-pytest                           # 49 API, engine-contract and planner tests, no GPU needed
+pytest                           # 50 API, engine-contract and planner tests, no GPU needed
 python tests/run_e2e.py          # real Chromium run through every feature
 ```
 

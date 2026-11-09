@@ -221,6 +221,11 @@ async def polish(song_id: str, scored: bool) -> None:
         merge_params(song_id, polishing="mastering")
         try:
             out = await asyncio.to_thread(A.master, raw, raw.with_name(raw.stem + "_mx"), settings.master_lufs)
+            if not state.store.get_song(song_id):  # deleted while it was being mastered
+                for f in (out.get("mp3"), out.get("wav"), raw):
+                    if f:
+                        remove_file(Path(f))
+                return
             if out.get("wav"):
                 state.store.update_song(song_id, audio_file=Path(out["mp3"]).name)
                 merge_params(song_id, raw_file=raw.name, wav_file=Path(out["wav"]).name,
@@ -757,14 +762,35 @@ async def api_delete(song_id: str) -> dict:
         raise HTTPException(409, "wait until the song finishes")
     state.store.delete_song(song_id)
     params = song.get("params") or {}
-    for name in (song.get("audio_file"), params.get("raw_file"), params.get("wav_file")):
-        if name:
-            (settings.audio_dir / name).unlink(missing_ok=True)
-    for vid in settings.audio_dir.glob(f"{song_id}_*.mp4"):
-        vid.unlink(missing_ok=True)
+    files = [settings.audio_dir / n for n in (song.get("audio_file"), params.get("raw_file"),
+                                              params.get("wav_file")) if n]
+    files += list(settings.audio_dir.glob(f"{song_id}_*.mp4"))
     if song.get("cover_file"):
-        (settings.cover_dir / song["cover_file"]).unlink(missing_ok=True)
+        files.append(settings.cover_dir / song["cover_file"])
+    for path in files:
+        remove_file(path)
     return {"deleted": song_id}
+
+
+def remove_file(path: Path, tries: int = 30) -> None:
+    """Delete a file now, or keep retrying in the background if something still has it
+    open. Windows refuses to delete open files (a player streaming it, ffmpeg mastering it)."""
+    try:
+        path.unlink(missing_ok=True)
+        return
+    except PermissionError:
+        pass
+
+    async def retry() -> None:
+        for _ in range(tries):
+            await asyncio.sleep(2)
+            try:
+                path.unlink(missing_ok=True)
+                return
+            except PermissionError:
+                continue
+
+    spawn(retry())
 
 
 @app.get("/api/songs/{song_id}/audio")

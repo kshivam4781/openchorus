@@ -242,3 +242,23 @@ def test_restart_resumes_unfinished_finishing(client, aux):
     s = wait_polished(client, s["id"])
     assert s["params"]["rating"]["overall"] > 7 and s["cover_file"]
     assert s["audio_file"].endswith("_mx.mp3") and "_mx_mx" not in s["audio_file"]  # not mastered twice
+
+
+def test_delete_survives_locked_files(client, monkeypatch, tmp_path):
+    """Windows refuses to delete a file that is still open; delete must not fail with a 500."""
+    import pathlib
+
+    s = create(client, mode="custom", style="pop", title="Locked", variations=1, duration=10)[0]
+    s = wait_polished(client, s["id"])
+    real = pathlib.Path.unlink
+    calls = {"n": 0}
+
+    def flaky(self, missing_ok=False):
+        calls["n"] += 1
+        if calls["n"] <= 2:
+            raise PermissionError(32, "The process cannot access the file")
+        return real(self, missing_ok=missing_ok)
+
+    monkeypatch.setattr(pathlib.Path, "unlink", flaky)
+    assert client.delete(f"/api/songs/{s['id']}").status_code == 200
+    assert client.get(f"/api/songs/{s['id']}").status_code == 404
