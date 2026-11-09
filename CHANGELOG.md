@@ -6,6 +6,39 @@ All notable changes to OpenChorus are listed here. The format follows
 
 ## [Unreleased]
 
+## [1.0.2] - 2026-11-09
+
+Cross-platform fixes for macOS, Linux and Windows.
+
+### Added
+- The launchers check for Python 3.10 or newer and look for `python3.13` down to `python3.10`
+  first, so a Mac with the old built-in Python 3.9 uses the Homebrew one. Clear help when
+  Python or the venv module is missing.
+- AI service on Apple Silicon: cover art runs on the Mac GPU (MPS). The setup script installs
+  the CPU build of PyTorch on Linux and Windows machines without an NVIDIA card.
+- CI runs the tests on macOS and Python 3.13 too, checks the shell scripts with shellcheck,
+  and starts and stops the app with the one-click scripts on Linux, macOS and Windows.
+- README: one-line prerequisite installs per system, and more troubleshooting entries.
+
+### Changed
+- `start_all` turns on ACE-Step's large-chunk GPU audio decoding only on NVIDIA cards with
+  11 GB or more. Smaller cards keep ACE-Step's memory-safe defaults instead of running out
+  of memory.
+- All logs from `start_all.bat` now go to the `logs` folder, like on macOS and Linux.
+- `setup_acestep` installs ACE-Step and exits; `start_all` starts it.
+- Docker Compose runs ACE-Step with the 0.6B planner and loads the models at startup (its
+  image defaults to the 4B planner, which needs far more memory).
+
+### Fixed
+- `stop_all.sh` could leave ACE-Step running
+  on macOS, which has no `setsid`. Each part now runs in its own process group on both
+  systems, and `stop_all.sh` waits for it and force-stops it if needed.
+- `start_all.bat` failed when `uv` had just been installed (not yet on PATH) and when run
+  without a console, where `timeout` does not work. It now waits until the app answers
+  before opening the browser.
+- `start_all` now installs new requirements after an update (it only did so on the first run).
+- `start.sh` opened the browser too early and tried `xdg-open` on machines without a desktop.
+
 ## [1.0.1] - 2026-11-09
 
 ### Added
@@ -49,6 +82,7 @@ First public release.
   start/stop scripts, Docker and Docker Compose files.
 - **Tests:** 50 API and engine-contract tests plus a Playwright end-to-end run.
 
-[Unreleased]: https://github.com/kshivam4781/openchorus/compare/v1.0.1...HEAD
+[Unreleased]: https://github.com/kshivam4781/openchorus/compare/v1.0.2...HEAD
+[1.0.2]: https://github.com/kshivam4781/openchorus/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/kshivam4781/openchorus/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/kshivam4781/openchorus/releases/tag/v1.0.0

@@ -1,6 +1,6 @@
 [project]
 name = "openchorus"
-version = "1.0.1"
+version = "1.0.2"
 description = "Free, open-source, self-hosted song studio: describe a song, get full tracks with vocals, cover art and stems."
 readme = "README.md"
 license = { text = "MIT" }

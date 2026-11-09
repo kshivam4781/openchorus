@@ -4,6 +4,8 @@ services:
     build: ../ACE-Step-1.5
     environment:
       - ACESTEP_MODE=api            # ACE-Step's image runs its REST API on 0.0.0.0:8001 in this mode
+      - ACESTEP_NO_INIT=false       # load the models at startup instead of on the first song
+      - ACESTEP_LM_MODEL_PATH=acestep-5Hz-lm-0.6B   # the image defaults to the 4B planner; 0.6B fits 8 to 12 GB cards and scored best in our tests
     volumes:
       - acestep-checkpoints:/app/checkpoints
     deploy:

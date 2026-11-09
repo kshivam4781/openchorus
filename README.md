@@ -85,6 +85,13 @@ CPU-only machines also work through ACE-Step's own backends, just slower.
 
 You need Python 3.10+ and [FFmpeg](https://ffmpeg.org/download.html) on your PATH.
 
+| System | Install the two prerequisites |
+|---|---|
+| Windows 10/11 | `winget install Python.Python.3.12 Gyan.FFmpeg` |
+| macOS | `brew install python@3.12 ffmpeg` (the built-in `python3` is 3.9, too old; the scripts find the newer one) |
+| Ubuntu / Debian | `sudo apt install python3 python3-venv ffmpeg` |
+| Fedora | `sudo dnf install python3 ffmpeg` |
+
 ```bash
 git clone https://github.com/kshivam4781/openchorus
 cd openchorus
@@ -115,7 +122,9 @@ For a GPU setup with ACE-Step in a second container, clone ACE-Step next to this
 ## Turn on real AI songs (ACE-Step 1.5)
 
 Recommended: an NVIDIA GPU with 6 GB+ VRAM. Apple Silicon, AMD (ROCm), Intel XPU and CPU
-are supported by ACE-Step too, just slower.
+are supported by ACE-Step too, just slower. The setup scripts also need `git`.
+`start_all` turns on ACE-Step's faster audio decoding only on NVIDIA cards with 11 GB or more,
+so smaller cards keep its memory-safe defaults.
 
 **Windows:** run `setup_acestep.bat` once (it installs ACE-Step next to this folder),
 then `start_all.bat` starts everything and `stop_all.bat` stops it.
@@ -164,7 +173,8 @@ the GPU next to ACE-Step:
 | [Demucs htdemucs](https://github.com/facebookresearch/demucs) | 2 or 4 stem separation |
 
 Install it once with `setup_ai_service.bat` on Windows or `./setup_ai_service.sh` on macOS and
-Linux (about 8 GB of downloads); `start_all` then starts it on port 8002. It loads each model only when needed and frees GPU memory after
+Linux (about 8 GB of downloads); `start_all` then starts it on port 8002. The setup picks the
+right PyTorch build: CUDA on NVIDIA, Apple Silicon (MPS) on a Mac, and the CPU build otherwise. It loads each model only when needed and frees GPU memory after
 each job so it fits beside the music model on a 12 GB card. Without it everything still works:
 songs get the tape-reel artwork and no rating.
 
@@ -222,6 +232,9 @@ persona → `reference_audio`. The front end is plain HTML, CSS and JavaScript w
 | Model downloads stall at 0% | Use `python tools/fetch_models.py <repo> <folder>`, which downloads in resumable parallel parts. |
 | Everything is twice as slow on a laptop | Plug it in. On battery, Windows caps the GPU. |
 | "Address already in use" | Something else uses port 7777. Set `OPENCHORUS_PORT=7778`. |
+| "OpenChorus needs Python 3.10 or newer" | Install a newer Python (see Quick start). On a Mac, `brew install python@3.12`. |
+| "Could not create a virtual environment" | Debian and Ubuntu ship Python without venv: `sudo apt install python3-venv`. |
+| Something did not start | Each part writes a log in the `logs` folder: `openchorus.log`, `acestep.log`, `ai_service.log`. |
 | ACE-Step closes right after starting on Windows | Use `start_all.bat`, which sets UTF-8 output. ACE-Step prints emoji that crash Python when its output goes to a log file. |
 
 ## Configuration
@@ -278,7 +291,8 @@ pytest                           # 50 API, engine-contract and planner tests, no
 python tests/run_e2e.py          # real Chromium run through every feature
 ```
 
-CI runs lint, tests on Linux and Windows (Python 3.10 and 3.12), the browser end-to-end run,
+CI runs lint and shellcheck, tests on Linux, Windows and macOS (Python 3.10, 3.12 and 3.13),
+the one-click start and stop scripts on all three systems, the browser end-to-end run,
 a Docker build and CodeQL on every push. Tagging `vX.Y.Z` publishes a multi-arch image to
 GitHub Container Registry. See [CONTRIBUTING.md](CONTRIBUTING.md).
 

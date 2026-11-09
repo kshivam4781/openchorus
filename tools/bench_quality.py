@@ -94,7 +94,7 @@ def main() -> None:
         results.append(r)
         print(f"{song['name']:5s} overall={q.get('overall')} CE={q.get('CE')} PQ={q.get('PQ')} "
               f"time={r['seconds']}s", flush=True)
-    (out / "results.json").write_text(json.dumps(results, indent=2))
+    (out / "results.json").write_text(json.dumps(results, indent=2), encoding="utf-8")
     print("saved", out / "results.json")
 
 

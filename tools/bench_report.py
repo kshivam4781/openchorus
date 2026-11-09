@@ -6,7 +6,7 @@ from pathlib import Path
 root = Path(sys.argv[1] if len(sys.argv) > 1 else "bench")
 rows = []
 for d in sorted(p for p in root.iterdir() if (p / "results.json").exists()):
-    res = [r for r in json.loads((d / "results.json").read_text()) if "error" not in r]
+    res = [r for r in json.loads((d / "results.json").read_text(encoding="utf-8")) if "error" not in r]
     if not res:
         continue
     avg = lambda k: sum(r["quality"].get(k, 0) for r in res) / len(res)

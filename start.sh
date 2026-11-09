@@ -1,15 +1,17 @@
 #!/usr/bin/env bash
-# Start OpenChorus on http://127.0.0.1:7777
+# Start OpenChorus on http://127.0.0.1:7777 (stop with Ctrl+C).
 set -e
 cd "$(dirname "$0")"
-if ! command -v ffmpeg >/dev/null 2>&1; then
-  echo "Note: ffmpeg not found. Install it for MP3 output and uploads (brew install ffmpeg / sudo apt install ffmpeg)."
+. scripts/find_python.sh
+check_ffmpeg
+make_venv .venv
+.venv/bin/python -m pip install -q -r requirements.txt
+PORT="${OPENCHORUS_PORT:-7777}"
+if [ -n "${OPENCHORUS_NO_BROWSER:-}" ]; then
+  :
+elif [ "$(uname)" = Darwin ]; then
+  (sleep 3; open "http://127.0.0.1:$PORT") >/dev/null 2>&1 &
+elif command -v xdg-open >/dev/null 2>&1 && [ -n "${DISPLAY:-}${WAYLAND_DISPLAY:-}" ]; then
+  (sleep 3; xdg-open "http://127.0.0.1:$PORT") >/dev/null 2>&1 &
 fi
-if [ ! -d .venv ]; then
-  python3 -m venv .venv
-fi
-. .venv/bin/activate
-python -m pip install -q --upgrade pip
-python -m pip install -q -r requirements.txt
-( sleep 2; (command -v xdg-open >/dev/null && xdg-open http://127.0.0.1:7777) || (command -v open >/dev/null && open http://127.0.0.1:7777) || true ) >/dev/null 2>&1 &
-exec python -m server.main
+exec .venv/bin/python -m server.main

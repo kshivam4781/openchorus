@@ -9,9 +9,14 @@ if ! command -v uv >/dev/null 2>&1; then
 fi
 [ -d .venv ] || uv venv --python 3.11 .venv
 if command -v nvidia-smi >/dev/null 2>&1; then
+  echo "NVIDIA GPU found: installing PyTorch with CUDA"
   uv pip install --python .venv/bin/python torch torchaudio --index-url https://download.pytorch.org/whl/cu128
+elif [ "$(uname)" = Darwin ]; then
+  echo "macOS: installing PyTorch with Apple Silicon (MPS) support"
+  uv pip install --python .venv/bin/python torch torchaudio
 else
-  uv pip install --python .venv/bin/python torch torchaudio    # CPU or Apple Silicon (MPS)
+  echo "No NVIDIA GPU: installing the smaller CPU build of PyTorch"
+  uv pip install --python .venv/bin/python torch torchaudio --index-url https://download.pytorch.org/whl/cpu
 fi
 uv pip install --python .venv/bin/python -r requirements.txt
 .venv/bin/python - <<'PY'

@@ -53,9 +53,9 @@ def main() -> None:
     from faster_whisper import WhisperModel
 
     for d in map(Path, sys.argv[1:]):
-        res = json.loads((d / "results.json").read_text())
+        res = json.loads((d / "results.json").read_text(encoding="utf-8"))
         rescore(d, res)
-        (d / "results.json").write_text(json.dumps(res, indent=2))
+        (d / "results.json").write_text(json.dumps(res, indent=2), encoding="utf-8")
 
     try:
         import torch  # noqa: F401  (puts the CUDA libraries that torch ships on the DLL path)
@@ -64,7 +64,7 @@ def main() -> None:
         print("whisper on CPU:", exc, flush=True)
         model = WhisperModel("mobiuslabsgmbh/faster-whisper-large-v3-turbo", device="cpu", compute_type="int8")
     for d in map(Path, sys.argv[1:]):
-        res = json.loads((d / "results.json").read_text())
+        res = json.loads((d / "results.json").read_text(encoding="utf-8"))
         for r in res:
             if not r.get("lyrics") or "error" in r or "wer" in r:
                 continue
@@ -73,7 +73,7 @@ def main() -> None:
             r["wer"] = round(wer(words(r["lyrics"]), words(hyp)), 3)
             r["heard"] = hyp[:400]
             print(f"{d.name:14s} {r['name']:5s} WER={r['wer']:.2f}", flush=True)
-        (d / "results.json").write_text(json.dumps(res, indent=2))
+        (d / "results.json").write_text(json.dumps(res, indent=2), encoding="utf-8")
 
 
 if __name__ == "__main__":

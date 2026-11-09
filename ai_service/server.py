@@ -116,7 +116,12 @@ _cover = None
 def _device() -> str:
     import torch
 
-    return "cuda" if torch.cuda.is_available() else "cpu"
+    if torch.cuda.is_available():
+        return "cuda"
+    mps = getattr(torch.backends, "mps", None)
+    if mps is not None and mps.is_available() and os.environ.get("AUX_DEVICE", "").lower() != "cpu":
+        return "mps"  # Apple Silicon
+    return "cpu"
 
 
 def _free_gpu() -> None:
@@ -126,6 +131,8 @@ def _free_gpu() -> None:
 
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
+        elif getattr(torch.backends, "mps", None) is not None and torch.backends.mps.is_available():
+            torch.mps.empty_cache()
     except Exception:  # noqa: BLE001
         return  # no torch or no CUDA: nothing to free
 
@@ -322,14 +329,17 @@ def _get_cover():
         if not src:
             raise HTTPException(503, "the cover art model is not downloaded yet")
         model, lora = src
-        dtype = torch.float16 if _device() == "cuda" else torch.float32
+        device = _device()
+        dtype = torch.float16 if device in ("cuda", "mps") else torch.float32
         pipe = AutoPipelineForText2Image.from_pretrained(model, torch_dtype=dtype, variant="fp16")
         pipe.scheduler = LCMScheduler.from_config(pipe.scheduler.config)
         pipe.load_lora_weights(lora)
         pipe.fuse_lora()
-        if _device() == "cuda":
+        if device == "cuda":
             # Moves each sub-model to the GPU only while it runs: about 3 GB peak.
             pipe.enable_model_cpu_offload()
+        elif device == "mps":
+            pipe.to("mps")  # Apple Silicon shares memory with the CPU, so no offloading is needed
         pipe.vae.enable_tiling()
         _cover = pipe
     return _cover
@@ -420,6 +430,13 @@ def stems(body: StemsBody) -> dict:
     return {"stems": result, "seconds": round(time.time() - t, 2)}
 
 
+def _safe_device() -> str:
+    try:
+        return _device()
+    except Exception:  # noqa: BLE001
+        return "cpu"  # torch is not installed
+
+
 @app.get("/health")
 def health() -> dict:
     import importlib.util
@@ -438,6 +455,7 @@ def health() -> dict:
         "stems": importlib.util.find_spec("demucs") is not None,
         "clarity": whisper_ready(),
         "cuda": cuda,
+        "device": _safe_device(),
         "free_vram_gb": free,
         "loaded": {"judge": _judge is not None, "cover": _cover is not None},
     }
