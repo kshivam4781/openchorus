@@ -6,6 +6,19 @@ All notable changes to OpenChorus are listed here. The format follows
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-11-09
+
+### Added
+- `start_all.sh`, `stop_all.sh` and `setup_ai_service.sh` for macOS and Linux.
+- README sections on hardware requirements (with the tested laptop) and troubleshooting.
+
+### Fixed
+- `start.sh` and the other shell scripts were not executable in the repository, so
+  `./start.sh` failed on macOS and Linux.
+- ACE-Step could exit at startup on Windows when `start_all.bat` sent its output to a log
+  file (emoji in a cp1252 console). It now runs with UTF-8 output.
+- Docker: documented how to reach an ACE-Step server on the host.
+
 ## [1.0.0] - 2026-11-09
 
 First public release.
@@ -36,5 +49,6 @@ First public release.
   start/stop scripts, Docker and Docker Compose files.
 - **Tests:** 50 API and engine-contract tests plus a Playwright end-to-end run.
 
-[Unreleased]: https://github.com/kshivam4781/openchorus/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/kshivam4781/openchorus/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/kshivam4781/openchorus/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/kshivam4781/openchorus/releases/tag/v1.0.0

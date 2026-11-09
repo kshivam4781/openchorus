@@ -69,6 +69,18 @@ lyrics from a local LLM in [Ollama](https://ollama.com), cover art from
   </tr>
 </table>
 
+## What you need
+
+| | Minimum | Tested on |
+|---|---|---|
+| Try every feature (demo engine, no vocals) | Any computer with Python 3.10+ and FFmpeg. No GPU. | |
+| Real songs with vocals (ACE-Step 1.5) | NVIDIA GPU with 6 GB VRAM, 16 GB RAM, ~15 GB disk | Acer Predator Helios Neo 16 laptop: RTX 5070 Ti Laptop GPU (12 GB), Intel Core Ultra 9 275HX, 32 GB RAM, Windows 11 |
+| Everything (covers, ratings, Max Mode, 4 stems) | NVIDIA GPU with 8 GB+ VRAM, ~25 GB disk | Same laptop |
+
+On the tested laptop a 3-minute song with vocals takes about 25 to 40 seconds, and a full
+two-take Max Mode batch with covers and ratings takes a few minutes. Apple Silicon, AMD and
+CPU-only machines also work through ACE-Step's own backends, just slower.
+
 ## Quick start
 
 You need Python 3.10+ and [FFmpeg](https://ffmpeg.org/download.html) on your PATH.
@@ -92,6 +104,10 @@ vocals, start ACE-Step next to it (below). The page switches over by itself.
 docker run -p 7777:7777 -v openchorus-data:/data ghcr.io/kshivam4781/openchorus:latest
 ```
 
+To use an ACE-Step server running on the same machine, point the container at it:
+`-e ACESTEP_URL=http://host.docker.internal:8001` (on Linux also add
+`--add-host=host.docker.internal:host-gateway`).
+
 For a GPU setup with ACE-Step in a second container, clone ACE-Step next to this folder
 (`../ACE-Step-1.5`), install the NVIDIA container toolkit and run `docker compose up --build`.
 </details>
@@ -107,7 +123,9 @@ then `start_all.bat` starts everything and `stop_all.bat` stops it.
 **macOS / Linux:**
 
 ```bash
-./setup_acestep.sh          # clones ACE-Step-1.5 next to this folder and starts its API
+./setup_acestep.sh          # once: clones ACE-Step-1.5 next to this folder (first run downloads ~10 GB)
+./start_all.sh              # starts ACE-Step, the AI service (if installed) and OpenChorus; logs in ./logs
+./stop_all.sh               # stops them
 ```
 
 Or by hand:
@@ -145,8 +163,8 @@ the GPU next to ACE-Step:
 | [SSD-1B](https://huggingface.co/segmind/SSD-1B) + [LCM-LoRA](https://huggingface.co/latent-consistency/lcm-lora-ssd-1b) | 1024×1024 cover art in a few seconds |
 | [Demucs htdemucs](https://github.com/facebookresearch/demucs) | 2 or 4 stem separation |
 
-Install it once on Windows with `setup_ai_service.bat` (about 8 GB of downloads); `start_all.bat`
-then starts it on port 8002. It loads each model only when needed and frees GPU memory after
+Install it once with `setup_ai_service.bat` on Windows or `./setup_ai_service.sh` on macOS and
+Linux (about 8 GB of downloads); `start_all` then starts it on port 8002. It loads each model only when needed and frees GPU memory after
 each job so it fits beside the music model on a 12 GB card. Without it everything still works:
 songs get the tape-reel artwork and no rating.
 
@@ -193,6 +211,18 @@ flowchart LR
 Feature mapping in `server/engines/acestep.py`: create → `text2music`, cover → `cover`,
 replace section → `repaint`, extend → pad and `repaint` the new tail,
 persona → `reference_audio`. The front end is plain HTML, CSS and JavaScript with no build step.
+
+## Troubleshooting
+
+| Problem | Fix |
+|---|---|
+| The sidebar says "Demo synth" | ACE-Step is not running or is still loading its models. Start it with `start_all`, wait a minute, and the app switches by itself. |
+| Songs have no vocals | You are on the demo engine. See above. |
+| No cover art, no rating | The AI service is not installed or not running (`setup_ai_service`, then `start_all`). |
+| Model downloads stall at 0% | Use `python tools/fetch_models.py <repo> <folder>`, which downloads in resumable parallel parts. |
+| Everything is twice as slow on a laptop | Plug it in. On battery, Windows caps the GPU. |
+| "Address already in use" | Something else uses port 7777. Set `OPENCHORUS_PORT=7778`. |
+| ACE-Step closes right after starting on Windows | Use `start_all.bat`, which sets UTF-8 output. ACE-Step prints emoji that crash Python when its output goes to a log file. |
 
 ## Configuration
 
